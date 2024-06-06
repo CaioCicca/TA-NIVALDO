@@ -33,10 +33,13 @@ const Game = () => {
   const [timeLeft, setTimeLeft] = useState(10); // 10 seconds for each question
   const [hints, setHints] = useState(3); // Initial number of hints
   const [backgroundColor, setBackgroundColor] = useState("#f0f0f0");
+  const [selectedStatement, setSelectedStatement] = useState({});
+  const [questions, setQuestions] = useState([]);
   const timerRef = useRef(null);
   const cannonRef = useRef(null);
 
   useEffect(() => {
+    // Load high scores from AsyncStorage
     const loadScores = async () => {
       try {
         const savedScores = await AsyncStorage.getItem("highScores");
@@ -50,7 +53,9 @@ const Game = () => {
 
     loadScores();
 
+    // Clean up function
     return async () => {
+      // Unload sound if it exists
       if (sound) {
         await sound.unloadAsync();
       }
@@ -58,6 +63,7 @@ const Game = () => {
   }, []);
 
   useEffect(() => {
+    // Check for game over or victory conditions
     if (health <= 0) {
       setGameOver(true);
       setVictory(false);
@@ -76,6 +82,7 @@ const Game = () => {
   }, [health, info]);
 
   useEffect(() => {
+    // Adjust health based on difficulty
     if (difficulty === 2) {
       setHealth(50);
     } else if (difficulty === 3) {
@@ -84,6 +91,7 @@ const Game = () => {
   }, [difficulty]);
 
   useEffect(() => {
+    // Start or stop timer based on game state
     if (gameOver) {
       clearInterval(timerRef.current);
     } else {
@@ -91,7 +99,18 @@ const Game = () => {
     }
   }, [gameOver, info]);
 
+  useEffect(() => {
+    // Set selected statement when info changes
+    setSelectedStatement(info[0]);
+  }, [info]);
+
+  useEffect(() => {
+    // Set questions when difficulty changes
+    setQuestions([...info]);
+  }, [difficulty]);
+
   const startTimer = () => {
+    // Start the timer
     setTimeLeft(10);
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
@@ -107,77 +126,57 @@ const Game = () => {
   };
 
   const handleTimeout = () => {
+    // Handle timeout
     setHealth((prevHealth) => prevHealth - 10);
     playSound(wrongSound);
     Vibration.vibrate();
   };
 
-  const handleInfoClick = async (index) => {
+  const handleAnswer = (isCorrect) => {
+    // Handle user's answer
     if (!gameOver) {
-      const selectedInfo = info[index];
       clearInterval(timerRef.current);
-      if (!selectedInfo.correct) {
+      if (isCorrect === selectedStatement.correct) {
+        setScore((prevScore) => prevScore + 10);
+        playSound(correctSound);
+        setBackgroundColor("#4cff4c");
+      } else {
         setHealth((prevHealth) => prevHealth - 20);
-        await playSound(wrongSound);
+        playSound(wrongSound);
         Vibration.vibrate();
         setBackgroundColor("#ff4c4c");
-      } else {
-        setScore((prevScore) => prevScore + 10);
-        await playSound(correctSound);
-        setBackgroundColor("#4cff4c");
       }
-      setInfo((prevInfo) => {
-        const newInfo = [...prevInfo];
-        newInfo.splice(index, 1);
-        return newInfo;
-      });
+      setInfo((prevInfo) => prevInfo.filter((item) => item !== selectedStatement));
       startTimer();
     }
   };
 
   const handleRestart = () => {
+    // Restart the game
     setScore(0);
     setHealth(100);
-    setInfo([
-      { text: "Vacinas são seguras e eficazes.", correct: true },
-      { text: "Exercícios regulares são importantes para a saúde.", correct: true },
-      { text: "Mantenha uma dieta equilibrada para se manter saudável.", correct: true },
-      { text: "Notícias falsas podem causar danos à saúde.", correct: true },
-      { text: "Consulte um médico antes de confiar em informações de saúde.", correct: true },
-      { text: "Beber água regularmente é essencial para o corpo humano.", correct: true },
-      { text: "Dormir o suficiente é crucial para o bem-estar.", correct: true },
-      { text: "Cuidado com remédios caseiros não comprovados cientificamente.", correct: true },
-      { text: "O sol gira ao redor da Terra.", correct: false },
-      { text: "Beber café desidrata.", correct: false },
-    ]);
+    setInfo([...questions]);
     setGameOver(false);
     setVictory(false);
-    setHints(3);
     setBackgroundColor("#f0f0f0");
-    startTimer();
+    
   };
 
   const playSound = async (soundFile) => {
+    // Play sound effect
     const { sound } = await Audio.Sound.createAsync(soundFile);
     setSound(sound);
     await sound.playAsync();
   };
 
-  const saveScores = async (newScores) => {
-    try {
-      await AsyncStorage.setItem("highScores", JSON.stringify(newScores));
-      setHighScores(newScores);
-    } catch (error) {
-      console.error("Error saving scores:", error);
-    }
-  };
-
   const handleDifficultyChange = () => {
+    // Change difficulty level
     const newDifficulty = difficulty === 3 ? 1 : difficulty + 1;
     setDifficulty(newDifficulty);
   };
 
   const handleBounce = () => {
+    // Animate bounce effect
     Animated.sequence([
       Animated.timing(bounceValue, { toValue: 1.2, duration: 200, easing: Easing.linear, useNativeDriver: true }),
       Animated.timing(bounceValue, { toValue: 1, duration: 200, easing: Easing.linear, useNativeDriver: true }),
@@ -185,26 +184,50 @@ const Game = () => {
   };
 
   const useHint = () => {
+    // Use hint to reveal correct answer
     if (hints > 0) {
       const correctInfo = info.find((infoItem) => infoItem.correct);
       if (correctInfo) {
         const correctIndex = info.indexOf(correctInfo);
-        handleInfoClick(correctIndex);
+        handleAnswer(true);
         setHints(hints - 1);
       }
     }
   };
 
   const resetScores = () => {
+    // Reset high scores
     saveScores([]);
   };
 
   const renderHighScores = () => {
+    // Render high scores
     return highScores.slice(0, 5).map((score, index) => (
       <Text key={index} style={styles.highScoreText}>
         {index + 1}. {score}
       </Text>
     ));
+  };
+
+  const renderButtons = () => {
+    return (
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => handleAnswer(true)}
+          disabled={gameOver}
+        >
+          <Text style={styles.buttonText}>Verdadeiro</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => handleAnswer(false)}
+          disabled={gameOver}
+        >
+          <Text style={styles.buttonText}>Falso</Text>
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   return (
@@ -217,33 +240,21 @@ const Game = () => {
         <Button title="Dificuldade" onPress={handleDifficultyChange} />
         <Button title="Usar dica" onPress={useHint} disabled={hints === 0} />
       </View>
+      {renderButtons()}
       {gameOver ? (
         <View style={styles.gameOverContainer}>
           <Text style={styles.gameOverText}>{victory ? "Parabéns! Você ganhou!" : "Você perdeu. Tente novamente!"}</Text>
-          <Text style={styles.highScoreTitle}>Pontuações mais altas:</Text>
-          {renderHighScores()}
           <Button title="Reiniciar" onPress={handleRestart} />
-          <Button title="Resetar pontuações" onPress={resetScores} />
         </View>
       ) : (
         <Animated.View style={{ transform: [{ scale: bounceValue }] }}>
           <View style={styles.infoContainer}>
-            {info.map((infoItem, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.infoButton}
-                onPress={() => {
-                  handleInfoClick(index);
-                  handleBounce();
-                }}
-              >
-                <Text style={styles.infoText}>{infoItem.text}</Text>
-              </TouchableOpacity>
-            ))}
+            <Text style={styles.infoText}>{selectedStatement.text}</Text>
           </View>
         </Animated.View>
-      )}
-      <ConfettiCannon ref={cannonRef} count={200} origin={{ x: -10, y: 0 }} fadeOut={true} />
+      )}{
+        victory && <ConfettiCannon count={200} origin={{ x: -10, y: 0 }} ref={cannonRef} />
+      }
     </View>
   );
 };
@@ -253,26 +264,31 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#000000",
   },
   score: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 10,
+    color: "#f2f2f2",
   },
   health: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
+    color: "#f2f2f2",
   },
   timer: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 20,
+    color: "#f2f2f2",
   },
   hints: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 20,
+    color: "#f2f2f2",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -280,16 +296,15 @@ const styles = StyleSheet.create({
     width: "80%",
     marginBottom: 20,
   },
-  infoContainer: {
-    width: "80%",
-  },
-  infoButton: {
+  button: {
     backgroundColor: "#e0e0e0",
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
+    width: "48%",
+    alignItems: "center",
   },
-  infoText: {
+  buttonText: {
     fontSize: 18,
   },
   gameOverContainer: {
@@ -298,13 +313,16 @@ const styles = StyleSheet.create({
   gameOverText: {
     fontSize: 24,
     marginBottom: 10,
+    color: "#f2f2f2",
   },
   highScoreTitle: {
     fontSize: 20,
     marginBottom: 10,
+    color: "#f2f2f2",
   },
   highScoreText: {
     fontSize: 18,
+    color: "#f2f2f2",
   },
 });
 
