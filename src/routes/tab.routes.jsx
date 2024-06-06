@@ -10,7 +10,14 @@ const Tab = createBottomTabNavigator();
 
 const TabRoutes = () => {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator 
+    screenOptions={{
+      headerShown: false,
+      tabBarStyle: {
+        backgroundColor: "black"
+      },
+    }}
+    >
       <Tab.Screen
         name="Profile"
         component={Profile}
