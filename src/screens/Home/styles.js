@@ -3,29 +3,37 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor:"#333333"
+    backgroundColor: '#000', // Define a cor de fundo como preto
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  header:{
-    backgroundColor:"black",
-    display:"flex",
-    flexDirection:"row",
-    gap: 10,
-    alignItems:"center",
-    padding:14,
-    width:400,
-    top:-360
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  titulo:{
-    fontSize:30,
-    fontWeight:"bold",
-    color:"#F60100"
+  logo: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+    marginRight: 10,
   },
-  foto:{
-    width:70,
-    height:70
-  }
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF', // Cor do texto do título
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonTextHovered: {
+    textDecorationLine: 'underline', // Adicione qualquer estilo adicional para quando o mouse está sobre o botão
+  },
+  additionalContent: {
+    // Adicione mais estilos conforme necessário
+  },
 });
 
 export default styles;
