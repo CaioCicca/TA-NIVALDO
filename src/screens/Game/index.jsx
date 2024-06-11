@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Button, AsyncStorage, Animated, Easing, Vibration } from "react-native";
 import { Audio } from "expo-av";
 import ConfettiCannon from 'react-native-confetti-cannon';
-
+import styles from "./styles";
 // Import sound files
 import wrongSound from '../../../assets/wrong.mp3';
 import correctSound from '../../../assets/correct.mp3';
