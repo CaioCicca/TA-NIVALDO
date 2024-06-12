@@ -49,7 +49,7 @@ export default function EpicVinheta() {
       <View style={styles.additionalContent}>
         {/* Conteúdo adicional aqui */}
         <TouchableOpacity 
-          onPress={() => navigation.navigate('Game')}
+          onPress={() => navigation.navigate('Introducao')}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
