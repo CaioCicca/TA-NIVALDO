@@ -146,7 +146,6 @@ const Introducao = () => {
 const styles = {
   container: {
     flexGrow: 1,
-    padding: 20,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -155,6 +154,7 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
+    minWidth: '100%', // Adicionado para garantir que o conteúdo não ultrapasse a largura da tela
   },
   title: {
     fontSize: 24,
