@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
 import { useNavigation } from "@react-navigation/native";
-import styles from "./styles";
+import styles from "./styles.js";
 
 const Introducao = () => {
   const navigation = useNavigation();
